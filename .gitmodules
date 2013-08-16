@@ -1,3 +1,6 @@
 [submodule "XMake"]
 	path = XMake
 	url = https://github.com/Kanma/XMake.git
+[submodule "FreenectSDK"]
+	path = FreenectSDK
+	url = https://github.com/Kanma/FreenectSDK.git
