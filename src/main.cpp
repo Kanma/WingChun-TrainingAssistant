@@ -5,7 +5,7 @@ int main(int argc, char** argv)
 {
     Application application;
 
-    if (!application.init())
+    if (!application.init(argc, argv))
         return 1;
 
     application.run();
