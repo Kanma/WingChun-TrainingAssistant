@@ -43,3 +43,4 @@ include("${XMAKE_DEPENDENCIES_DIR}/XMake/XMake.cmake")
 # Process the subdirectories
 
 add_subdirectory(FreenectSDK)
+add_subdirectory(src)
