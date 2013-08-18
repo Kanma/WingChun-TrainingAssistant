@@ -1,9 +1,11 @@
 # List the source files
 set(HEADERS Application.h
+            FrontView.h
 )
 
 set(SRCS main.cpp
          Application.cpp
+         FrontView.cpp
 )
 
 

@@ -2,6 +2,7 @@
 #define _APPLICATION_H_
 
 #include <NiTE.h>
+#include "FrontView.h"
 
 
 class Application
@@ -33,6 +34,8 @@ private:
     //_____ Attributes __________
 private:
     static Application* m_pInstance;
+
+    FrontView           m_frontView;
 
     openni::Device      m_device;
     nite::UserTracker   m_userTracker;

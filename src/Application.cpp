@@ -80,7 +80,7 @@ void Application::initOpenGL(int argc, char** argv)
 
     // glutKeyboardFunc(glutKeyboard);
     glutDisplayFunc(displayCallback);
-    // glutIdleFunc(glutIdle);
+    glutIdleFunc(glutPostRedisplay);
 }
 
 
@@ -88,6 +88,24 @@ void Application::initOpenGL(int argc, char** argv)
 
 void Application::display()
 {
+    // Retrieve the current state of the user tracker
+    nite::UserTrackerFrameRef userTrackerFrame;
+    m_userTracker.readFrame(&userTrackerFrame);
+
+    // Retrieve the depth frame
+    openni::VideoFrameRef depthFrame = userTrackerFrame.getDepthFrame();
+
+    // Inform the views
+    m_frontView.setDepthFrame(&depthFrame);
+
+    // Clear the display
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Ask each view to display itself
+    m_frontView.display();
+
+    // Swap the OpenGL display buffers
+    glutSwapBuffers();
 }
 
 //----------------------------------------------
