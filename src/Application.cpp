@@ -6,6 +6,16 @@ const int WINDOW_WIDTH  = 1280;
 const int WINDOW_HEIGHT = 768;
 
 
+Application* Application::m_pInstance = 0;
+
+
+//----------------------------------------------
+
+Application::Application()
+{
+    m_pInstance = this;
+}
+
 //----------------------------------------------
 
 bool Application::init(int argc, char** argv)
@@ -37,6 +47,20 @@ void Application::initOpenGL(int argc, char** argv)
     glutSetCursor(GLUT_CURSOR_NONE);
 
     // glutKeyboardFunc(glutKeyboard);
-    // glutDisplayFunc(glutDisplay);
+    glutDisplayFunc(displayCallback);
     // glutIdleFunc(glutIdle);
+}
+
+
+//----------------------------------------------
+
+void Application::display()
+{
+}
+
+//----------------------------------------------
+
+void Application::displayCallback()
+{
+    Application::getPtr()->display();
 }
