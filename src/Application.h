@@ -1,6 +1,9 @@
 #ifndef _APPLICATION_H_
 #define _APPLICATION_H_
 
+#include <NiTE.h>
+
+
 class Application
 {
     //_____ Construction / Destruction __________
@@ -19,6 +22,7 @@ public:
     }
 
 private:
+    bool initNiTE();
     void initOpenGL(int argc, char** argv);
 
     void display();
@@ -29,6 +33,9 @@ private:
     //_____ Attributes __________
 private:
     static Application* m_pInstance;
+
+    openni::Device      m_device;
+    nite::UserTracker   m_userTracker;
 };
 
 #endif
