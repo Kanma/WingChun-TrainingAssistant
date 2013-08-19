@@ -11,6 +11,7 @@ class Application
     //_____ Construction / Destruction __________
 public:
     Application();
+    ~Application();
 
 
     //_____ Methods __________

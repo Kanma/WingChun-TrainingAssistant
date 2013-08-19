@@ -1,6 +1,7 @@
 #include "Application.h"
 #include <GLUT/glut.h>
 #include <OpenNI.h>
+#include <FreenectDriver/Properties.h>
 #include <SimpleOpt.h>
 #include <iostream>
 
@@ -48,6 +49,16 @@ Application::Application()
 #endif
 {
     m_pInstance = this;
+}
+
+
+Application::~Application()
+{
+    if (m_device.isValid())
+    {
+        kinect_led_options options = KINECT_LED_OFF;
+        m_device.setProperty(KINECT_PROPERTY_LED_STATUS, &options, sizeof(kinect_led_options));
+    }
 }
 
 
@@ -124,6 +135,9 @@ bool Application::initNiTE()
         return false;
     }
 
+    kinect_led_options options = KINECT_LED_YELLOW;
+    m_device.setProperty(KINECT_PROPERTY_LED_STATUS, &options, sizeof(kinect_led_options));
+
     // Initialize the tracker
     nite::NiTE::initialize();
 
@@ -184,6 +198,9 @@ void Application::display()
 
         m_topView.init(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_WIDTH - width - 1,
                        (WINDOW_HEIGHT - height) / 2, width, height);
+
+        kinect_led_options options = KINECT_LED_BLINK_GREEN;
+        m_device.setProperty(KINECT_PROPERTY_LED_STATUS, &options, sizeof(kinect_led_options));
     }
 
     // Update the views

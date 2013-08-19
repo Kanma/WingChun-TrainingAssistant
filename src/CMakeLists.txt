@@ -18,6 +18,7 @@ xmake_import_search_paths(OPENNI2)
 xmake_import_search_paths(NITE2)
 
 include_directories("${WINGCHUN_TRAININGASSISTANT_SOURCE_DIR}/dependencies")
+include_directories("${FREENECT_SDK_SOURCE_DIR}")
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
