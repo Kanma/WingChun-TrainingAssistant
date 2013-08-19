@@ -5,7 +5,6 @@
 //----------------------------------------------
 
 FrontView::FrontView()
-: m_pTexture(0), m_textureWidth(0), m_textureHeight(0), m_srcWidth(0), m_srcHeight(0)
 {
 }
 
@@ -13,7 +12,40 @@ FrontView::FrontView()
 
 FrontView::~FrontView()
 {
-    delete[] m_pTexture;
+}
+
+//----------------------------------------------
+
+void FrontView::init(unsigned int windowWidth, unsigned int windowHeight,
+                     unsigned int x, unsigned int y, unsigned int width,
+                     unsigned int height
+                     DEVELOPMENT_PARAMETER(bool layoutDebugging))
+{
+    TextureView::init(windowWidth, windowHeight, x, y, width, height
+                      DEVELOPMENT_PARAMETER(layoutDebugging));
+
+#ifdef DEVELOPMENT_FEATURES
+    if (layoutDebugging)
+    {
+        createTexture(640, 480);
+
+        openni::RGB888Pixel* pTextureRow = m_pTexture;
+
+        for (int y = 0; y < 480; ++y)
+        {
+            openni::RGB888Pixel* pDest = pTextureRow;
+
+            for (int x = 0; x < 640; ++x, ++pDest)
+            {
+                pDest->r = 255;
+                pDest->g = 0;
+                pDest->b = 0;
+            }
+
+            pTextureRow += m_textureWidth;
+        }
+    }
+#endif
 }
 
 //----------------------------------------------
@@ -21,15 +53,7 @@ FrontView::~FrontView()
 void FrontView::setDepthFrame(openni::VideoFrameRef* pDepthFrame)
 {
     if (!m_pTexture)
-    {
-        m_srcWidth  = pDepthFrame->getWidth();
-        m_srcHeight = pDepthFrame->getHeight();
-
-        m_textureWidth  = ((m_srcWidth - 1) / 512 + 1) * 512;
-        m_textureHeight = ((m_srcHeight - 1) / 512 + 1) * 512;;
-
-        m_pTexture = new openni::RGB888Pixel[m_textureWidth * m_textureHeight];
-    }
+        createTexture(pDepthFrame->getWidth(), pDepthFrame->getHeight());
 
     memset(m_pTexture, 0, m_textureWidth * m_textureHeight * sizeof(openni::RGB888Pixel));
 
@@ -55,50 +79,4 @@ void FrontView::setDepthFrame(openni::VideoFrameRef* pDepthFrame)
         pDepthRow   += rowSize;
         pTextureRow += m_textureWidth;
     }
-}
-
-//----------------------------------------------
-
-void FrontView::display()
-{
-    // Setup the projection
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    glOrtho(0, m_srcWidth, m_srcHeight, 0, -1.0, 1.0);
-
-    // Prepare the texture
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_textureWidth, m_textureHeight, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, m_pTexture);
-
-    // Display it on a quad
-    glColor4f(1,1,1,1);
-
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-
-    // g_nXRes = depthFrame.getVideoMode().getResolutionX();
-    // g_nYRes = depthFrame.getVideoMode().getResolutionY();
-    // 
-    // upper left
-    glTexCoord2f(0, 0);
-    glVertex2f(0, 0);
-    // upper right
-    glTexCoord2f((float) m_srcWidth / (float) m_textureWidth, 0);
-    glVertex2f(m_srcWidth, 0);
-
-    // bottom right
-    glTexCoord2f((float) m_srcWidth / (float) m_textureWidth,
-                 (float) m_srcHeight / (float) m_textureHeight);
-    glVertex2f(m_srcWidth, m_srcHeight);
-
-    // bottom left
-    glTexCoord2f(0, (float) m_srcHeight / (float) m_textureHeight);
-    glVertex2f(0, m_srcHeight);
-
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
 }

@@ -3,6 +3,7 @@
 
 #include <NiTE.h>
 #include "FrontView.h"
+#include "TopView.h"
 
 
 class Application
@@ -36,9 +37,14 @@ private:
     static Application* m_pInstance;
 
     FrontView           m_frontView;
+    TopView             m_topView;
 
     openni::Device      m_device;
     nite::UserTracker   m_userTracker;
+
+#ifdef DEVELOPMENT_FEATURES
+    bool                m_bLayoutDebugging;
+#endif
 };
 
 #endif

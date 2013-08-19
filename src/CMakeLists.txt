@@ -1,17 +1,28 @@
 # List the source files
 set(HEADERS Application.h
             FrontView.h
+            TextureView.h
+            TopView.h
 )
 
 set(SRCS main.cpp
          Application.cpp
          FrontView.cpp
+         TextureView.cpp
+         TopView.cpp
 )
 
 
 # List the include paths
 xmake_import_search_paths(OPENNI2)
 xmake_import_search_paths(NITE2)
+
+include_directories("${WINGCHUN_TRAININGASSISTANT_SOURCE_DIR}/dependencies")
+
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_definitions(-DDEVELOPMENT_FEATURES)
+endif()
 
 
 # Declaration of the executable

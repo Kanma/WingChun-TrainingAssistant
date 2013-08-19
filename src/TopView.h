@@ -1,16 +1,16 @@
-#ifndef _FRONT_VIEW_H_
-#define _FRONT_VIEW_H_
+#ifndef _TOP_VIEW_H_
+#define _TOP_VIEW_H_
 
 #include "TextureView.h"
 #include <OpenNI.h>
 
 
-class FrontView: public TextureView
+class TopView: public TextureView
 {
     //_____ Construction / Destruction __________
 public:
-    FrontView();
-    virtual ~FrontView();
+    TopView();
+    virtual ~TopView();
 
 
     //_____ Methods __________
@@ -19,8 +19,6 @@ public:
                       unsigned int x, unsigned int y, unsigned int width,
                       unsigned int height
                       DEVELOPMENT_PARAMETER(bool layoutDebugging = false));
-
-    void setDepthFrame(openni::VideoFrameRef* pDepthFrame);
 
 
     //_____ Attributes __________
