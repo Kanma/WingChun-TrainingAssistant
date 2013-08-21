@@ -3,6 +3,7 @@
 
 #include "TextureView.h"
 #include <OpenNI.h>
+#include <NiTE.h>
 
 
 class FrontView: public TextureView
@@ -20,6 +21,8 @@ public:
                       unsigned int height
                       DEVELOPMENT_PARAMETER(bool layoutDebugging = false));
 
+    void setVideoFrame(openni::VideoFrameRef* pVideoFrame, const nite::UserMap& userMap);
+    void setVideoFrame(openni::VideoFrameRef* pVideoFrame);
     void setDepthFrame(openni::VideoFrameRef* pDepthFrame);
 
 

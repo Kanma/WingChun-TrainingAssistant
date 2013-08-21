@@ -49,6 +49,8 @@ Application::Application()
 #endif
 {
     m_pInstance = this;
+
+    pthread_mutex_init (&m_capture_mutex, 0);
 }
 
 
@@ -135,14 +137,34 @@ bool Application::initNiTE()
         return false;
     }
 
+    // Change the LED status
     kinect_led_options options = KINECT_LED_YELLOW;
     m_device.setProperty(KINECT_PROPERTY_LED_STATUS, &options, sizeof(kinect_led_options));
+
+    // Initialize the video stream
+    rc = m_videoStream.create(m_device, openni::SENSOR_COLOR);
+    if (rc != openni::STATUS_OK)
+    {
+        printf("Failed to create the video stream\n%s\n", openni::OpenNI::getExtendedError());
+        return false;
+    }
+
+    rc = m_videoStream.addNewFrameListener(this);
+    if (rc != openni::STATUS_OK)
+    {
+        printf("Failed to register the listener for the video stream\n%s\n", openni::OpenNI::getExtendedError());
+        return false;
+    }
 
     // Initialize the tracker
     nite::NiTE::initialize();
 
     if (m_userTracker.create(&m_device) != nite::STATUS_OK)
         return false;
+
+    m_userTracker.addNewFrameListener(this);
+
+    m_videoStream.start();
 
     return true;
 }
@@ -169,7 +191,6 @@ void Application::initOpenGL(int argc, char** argv)
     glDisableClientState(GL_COLOR_ARRAY);
 }
 
-
 //----------------------------------------------
 
 void Application::display()
@@ -178,18 +199,19 @@ void Application::display()
     if (!m_bLayoutDebugging)
     {
 #endif
-    // Retrieve the current state of the user tracker
-    nite::UserTrackerFrameRef userTrackerFrame;
-    m_userTracker.readFrame(&userTrackerFrame);
+    pthread_mutex_lock(&m_capture_mutex);
 
-    // Retrieve the depth frame
-    openni::VideoFrameRef depthFrame = userTrackerFrame.getDepthFrame();
+    if (!m_userTrackerFrame.isValid() || !m_videoFrame.isValid())
+    {
+        pthread_mutex_unlock(&m_capture_mutex);
+        return;
+    }
 
     // Initialise the views if necessary
     if (!m_frontView.isInitialised())
     {
         unsigned int width  = WINDOW_WIDTH * 2 / 3 - 2;
-        unsigned int height = width * depthFrame.getHeight() / depthFrame.getWidth();
+        unsigned int height = width * m_videoFrame.getHeight() / m_videoFrame.getWidth();
 
         m_frontView.init(WINDOW_WIDTH, WINDOW_HEIGHT, 1, (WINDOW_HEIGHT - height) / 2,
                          width, height);
@@ -204,7 +226,20 @@ void Application::display()
     }
 
     // Update the views
-    m_frontView.setDepthFrame(&depthFrame);
+    // openni::VideoFrameRef depthFrame = m_userTrackerFrame.getDepthFrame();
+    const nite::UserMap& userMap = m_userTrackerFrame.getUserMap();
+
+    if (m_userTrackerFrame.getUsers().getSize() > 0)
+        m_frontView.setVideoFrame(&m_videoFrame, userMap);
+    else
+        m_frontView.setVideoFrame(&m_videoFrame);
+
+    m_topView.setUserMap(userMap);
+
+    m_videoFrame.release();
+    m_userTrackerFrame.release();
+
+    pthread_mutex_unlock(&m_capture_mutex);
 
 #ifdef DEVELOPMENT_FEATURES
     }
@@ -242,4 +277,36 @@ void Application::display()
 void Application::displayCallback()
 {
     Application::getPtr()->display();
+}
+
+
+/************** IMPLEMENTATION OF openni::VideoStream::NewFrameListener *****************/
+
+void Application::onNewFrame(openni::VideoStream& stream)
+{
+    pthread_mutex_lock(&m_capture_mutex);
+
+    if (m_videoFrame.isValid())
+        m_videoFrame.release();
+
+    // Retrieve the current state of the user tracker
+    stream.readFrame(&m_videoFrame);
+
+    pthread_mutex_unlock(&m_capture_mutex);
+}
+
+
+/************** IMPLEMENTATION OF nite::UserTracker::NewFrameListener *****************/
+
+void Application::onNewFrame(nite::UserTracker& tracker)
+{
+    pthread_mutex_lock(&m_capture_mutex);
+
+    if (m_userTrackerFrame.isValid())
+        m_userTrackerFrame.release();
+
+    // Retrieve the current state of the user tracker
+    m_userTracker.readFrame(&m_userTrackerFrame);
+
+    pthread_mutex_unlock(&m_capture_mutex);
 }

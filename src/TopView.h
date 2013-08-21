@@ -3,6 +3,7 @@
 
 #include "TextureView.h"
 #include <OpenNI.h>
+#include <NiTE.h>
 
 
 class TopView: public TextureView
@@ -19,6 +20,8 @@ public:
                       unsigned int x, unsigned int y, unsigned int width,
                       unsigned int height
                       DEVELOPMENT_PARAMETER(bool layoutDebugging = false));
+
+    void setUserMap(const nite::UserMap& userMap);
 
 
     //_____ Attributes __________

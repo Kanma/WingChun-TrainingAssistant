@@ -50,6 +50,95 @@ void FrontView::init(unsigned int windowWidth, unsigned int windowHeight,
 
 //----------------------------------------------
 
+void FrontView::setVideoFrame(openni::VideoFrameRef* pVideoFrame,
+                              const nite::UserMap& userMap)
+{
+    if (!m_pTexture)
+        createTexture(pVideoFrame->getWidth(), pVideoFrame->getHeight());
+    
+    memset(m_pTexture, 0, m_textureWidth * m_textureHeight * sizeof(openni::RGB888Pixel));
+    
+    const openni::RGB888Pixel* pSrcRow = (const openni::RGB888Pixel*) pVideoFrame->getData();
+    const nite::UserId* pMaskRow       = (const nite::UserId*) userMap.getPixels();
+    openni::RGB888Pixel* pTextureRow   = m_pTexture + pVideoFrame->getCropOriginY() * m_textureWidth;
+    int rowSize                        = pVideoFrame->getStrideInBytes() / sizeof(openni::RGB888Pixel);
+    int maskRowSize                    = userMap.getStride() / sizeof(nite::UserId);
+    
+    for (int y = 0; y < m_srcHeight; ++y)
+    {
+        const openni::RGB888Pixel* pSrc = pSrcRow;
+        const nite::UserId* pMask       = pMaskRow;
+        openni::RGB888Pixel* pDest      = pTextureRow + pVideoFrame->getCropOriginX();
+
+        nite::UserId previous = 0;
+        for (int x = 0; x < m_srcWidth; ++x, ++pSrc, ++pMask, ++pDest)
+        {
+            if (*pMask != 0)
+            {
+                if (previous == 0)
+                {
+                    pDest->r = 0xFF;
+                    pDest->g = 0x00;
+                    pDest->b = 0x00;
+                }
+                else
+                {
+                    *pDest = *pSrc;
+                }
+            }
+            else
+            {
+                if (previous != 0)
+                {
+                    pDest->r = 0xFF;
+                    pDest->g = 0x00;
+                    pDest->b = 0x00;
+                }
+                else
+                {
+                    pDest->r = pSrc->r >> 2;
+                    pDest->g = pSrc->g >> 2;
+                    pDest->b = pSrc->b >> 2;
+                }
+            }
+
+            previous = *pMask;
+        }
+    
+        pSrcRow     += rowSize;
+        pMaskRow    += maskRowSize;
+        pTextureRow += m_textureWidth;
+    }
+}
+
+//----------------------------------------------
+
+void FrontView::setVideoFrame(openni::VideoFrameRef* pVideoFrame)
+{
+    if (!m_pTexture)
+        createTexture(pVideoFrame->getWidth(), pVideoFrame->getHeight());
+
+    memset(m_pTexture, 0, m_textureWidth * m_textureHeight * sizeof(openni::RGB888Pixel));
+
+    const openni::RGB888Pixel* pSrcRow = (const openni::RGB888Pixel*) pVideoFrame->getData();
+    openni::RGB888Pixel* pTextureRow   = m_pTexture + pVideoFrame->getCropOriginY() * m_textureWidth;
+    int rowSize                        = pVideoFrame->getStrideInBytes() / sizeof(openni::RGB888Pixel);
+
+    for (int y = 0; y < m_srcHeight; ++y)
+    {
+        const openni::RGB888Pixel* pSrc = pSrcRow;
+        openni::RGB888Pixel* pDest      = pTextureRow + pVideoFrame->getCropOriginX();
+
+        for (int x = 0; x < m_srcWidth; ++x, ++pSrc, ++pDest)
+            *pDest = *pSrc;
+
+        pSrcRow     += rowSize;
+        pTextureRow += m_textureWidth;
+    }
+}
+
+//----------------------------------------------
+
 void FrontView::setDepthFrame(openni::VideoFrameRef* pDepthFrame)
 {
     if (!m_pTexture)

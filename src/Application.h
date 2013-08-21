@@ -2,16 +2,18 @@
 #define _APPLICATION_H_
 
 #include <NiTE.h>
+#include <pthread.h>
 #include "FrontView.h"
 #include "TopView.h"
 
 
-class Application
+class Application: public openni::VideoStream::NewFrameListener,
+                          nite::UserTracker::NewFrameListener
 {
     //_____ Construction / Destruction __________
 public:
     Application();
-    ~Application();
+    virtual ~Application();
 
 
     //_____ Methods __________
@@ -33,18 +35,34 @@ private:
     static void displayCallback();
 
 
+    //_____ Implementation of openni::VideoStream::NewFrameListener __________
+public:
+    virtual void onNewFrame(openni::VideoStream& stream);
+
+
+    //_____ Implementation of nite::UserTracker::NewFrameListener __________
+public:
+    virtual void onNewFrame(nite::UserTracker& tracker);
+
+
     //_____ Attributes __________
 private:
-    static Application* m_pInstance;
+    static Application*       m_pInstance;
 
-    FrontView           m_frontView;
-    TopView             m_topView;
+    FrontView                 m_frontView;
+    TopView                   m_topView;
 
-    openni::Device      m_device;
-    nite::UserTracker   m_userTracker;
+    openni::Device            m_device;
+    openni::VideoStream       m_videoStream;
+    nite::UserTracker         m_userTracker;
+
+    openni::VideoFrameRef     m_videoFrame;
+    nite::UserTrackerFrameRef m_userTrackerFrame;
+
+    pthread_mutex_t           m_capture_mutex;
 
 #ifdef DEVELOPMENT_FEATURES
-    bool                m_bLayoutDebugging;
+    bool                      m_bLayoutDebugging;
 #endif
 };
 
