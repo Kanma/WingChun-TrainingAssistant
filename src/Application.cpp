@@ -44,8 +44,9 @@ Application* Application::m_pInstance = 0;
 /***************************** CONSTRUCTION / DESTRUCTION *******************************/
 
 Application::Application()
+: m_window(0)
 #ifdef DEVELOPMENT_FEATURES
-: m_bLayoutDebugging(false)
+, m_bLayoutDebugging(false)
 #endif
 {
     m_pInstance = this;
@@ -56,11 +57,7 @@ Application::Application()
 
 Application::~Application()
 {
-    if (m_device.isValid())
-    {
-        kinect_led_options options = KINECT_LED_OFF;
-        m_device.setProperty(KINECT_PROPERTY_LED_STATUS, &options, sizeof(kinect_led_options));
-    }
+    destroy();
 }
 
 
@@ -113,6 +110,31 @@ bool Application::init(int argc, char** argv)
 
 //----------------------------------------------
 
+void Application::destroy()
+{
+    glutDestroyWindow(m_window);
+
+    if (m_device.isValid())
+    {
+        kinect_led_options options = KINECT_LED_OFF;
+        m_device.setProperty(KINECT_PROPERTY_LED_STATUS, &options, sizeof(kinect_led_options));
+    }
+
+    nite::NiTE::shutdown();
+
+    if (m_videoStream.isValid())
+    {
+        m_videoStream.stop();
+        m_videoStream.destroy();
+    }
+
+    m_device.close();
+
+    openni::OpenNI::shutdown();
+}
+
+//----------------------------------------------
+
 void Application::run()
 {
     glutMainLoop();
@@ -156,6 +178,8 @@ bool Application::initNiTE()
         return false;
     }
 
+    m_videoStream.start();
+
     // Initialize the tracker
     nite::NiTE::initialize();
 
@@ -163,8 +187,6 @@ bool Application::initNiTE()
         return false;
 
     m_userTracker.addNewFrameListener(this);
-
-    m_videoStream.start();
 
     return true;
 }
@@ -177,13 +199,13 @@ void Application::initOpenGL(int argc, char** argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
     glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-    glutCreateWindow("Wing Chun Training Assistant");
+    m_window = glutCreateWindow("Wing Chun Training Assistant");
 
     // glutFullScreen();
 
     glutSetCursor(GLUT_CURSOR_NONE);
 
-    // glutKeyboardFunc(glutKeyboard);
+    glutKeyboardFunc(keyPressedCallback);
     glutDisplayFunc(displayCallback);
     glutIdleFunc(glutPostRedisplay);
 
@@ -277,6 +299,16 @@ void Application::display()
 void Application::displayCallback()
 {
     Application::getPtr()->display();
+}
+
+//----------------------------------------------
+
+void Application::keyPressedCallback(unsigned char key, int x, int y)
+{
+    if (key == 27) {
+        Application::getPtr()->destroy();
+        exit(0);
+    }
 }
 
 

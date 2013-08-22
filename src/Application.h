@@ -19,6 +19,8 @@ public:
     //_____ Methods __________
 public:
     bool init(int argc, char** argv);
+    void destroy();
+
     void run();
 
     inline static Application* getPtr()
@@ -33,6 +35,7 @@ private:
     void display();
 
     static void displayCallback();
+    static void keyPressedCallback(unsigned char key, int x, int y);
 
 
     //_____ Implementation of openni::VideoStream::NewFrameListener __________
@@ -49,6 +52,7 @@ public:
 private:
     static Application*       m_pInstance;
 
+    int                       m_window;
     FrontView                 m_frontView;
     TopView                   m_topView;
 
