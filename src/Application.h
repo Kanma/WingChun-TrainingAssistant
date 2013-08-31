@@ -34,6 +34,9 @@ private:
 
     void display();
 
+    void phaseUserDetection_process();
+    void phaseSkeletonDetection_process();
+
     static void displayCallback();
     static void keyPressedCallback(unsigned char key, int x, int y);
 
@@ -48,9 +51,19 @@ public:
     virtual void onNewFrame(nite::UserTracker& tracker);
 
 
+    //_____ Internal types __________
+private:
+    enum tPhase {
+        PHASE_USER_DETECTION,
+        PHASE_SKELETON_DETECTION,
+    };
+
+
     //_____ Attributes __________
 private:
     static Application*       m_pInstance;
+
+    tPhase                    m_phase;
 
     int                       m_window;
     FrontView                 m_frontView;

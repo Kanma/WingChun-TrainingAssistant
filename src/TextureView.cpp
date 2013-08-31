@@ -34,8 +34,122 @@ void TextureView::init(unsigned int windowWidth, unsigned int windowHeight,
 
 //----------------------------------------------
 
+void TextureView::reset()
+{
+    delete[] m_pTexture;
+
+    m_pTexture = 0;
+    m_textureWidth = 0;
+    m_textureHeight = 0;
+    m_srcWidth = 0;
+    m_srcHeight = 0;
+    m_windowWidth = 0;
+    m_windowHeight = 0;
+    m_x = 0;
+    m_y = 0;
+    m_width = 0;
+    m_height = 0;
+}
+
+//----------------------------------------------
+
+void TextureView::setVideoFrame(openni::VideoFrameRef* pVideoFrame)
+{
+    if (!m_pTexture)
+        createTexture(pVideoFrame->getWidth(), pVideoFrame->getHeight());
+
+    memset(m_pTexture, 0, m_textureWidth * m_textureHeight * sizeof(openni::RGB888Pixel));
+
+    const openni::RGB888Pixel* pSrcRow = (const openni::RGB888Pixel*) pVideoFrame->getData();
+    openni::RGB888Pixel* pTextureRow   = m_pTexture + pVideoFrame->getCropOriginY() * m_textureWidth;
+    int rowSize                        = pVideoFrame->getStrideInBytes() / sizeof(openni::RGB888Pixel);
+
+    for (int y = 0; y < m_srcHeight; ++y)
+    {
+        const openni::RGB888Pixel* pSrc = pSrcRow;
+        openni::RGB888Pixel* pDest      = pTextureRow + pVideoFrame->getCropOriginX();
+
+        for (int x = 0; x < m_srcWidth; ++x, ++pSrc, ++pDest)
+            *pDest = *pSrc;
+
+        pSrcRow     += rowSize;
+        pTextureRow += m_textureWidth;
+    }
+}
+
+//----------------------------------------------
+
+void TextureView::setDepthFrame(openni::VideoFrameRef* pDepthFrame)
+{
+    if (!m_pTexture)
+        createTexture(pDepthFrame->getWidth(), pDepthFrame->getHeight());
+
+    memset(m_pTexture, 0, m_textureWidth * m_textureHeight * sizeof(openni::RGB888Pixel));
+
+    const openni::DepthPixel* pDepthRow = (const openni::DepthPixel*) pDepthFrame->getData();
+    openni::RGB888Pixel* pTextureRow    = m_pTexture + pDepthFrame->getCropOriginY() * m_textureWidth;
+    int rowSize                         = pDepthFrame->getStrideInBytes() / sizeof(openni::DepthPixel);
+
+    for (int y = 0; y < m_srcHeight; ++y)
+    {
+        const openni::DepthPixel* pDepth = pDepthRow;
+        openni::RGB888Pixel* pDest       = pTextureRow + pDepthFrame->getCropOriginX();
+
+        for (int x = 0; x < m_srcWidth; ++x, ++pDepth, ++pDest)
+        {
+            if (*pDepth != 0)
+            {
+                pDest->r = 255 * ((1.0f - (float) *pDepth) / 0xFFFF);
+                pDest->g = pDest->r;
+                pDest->b = pDest->r;
+            }
+        }
+
+        pDepthRow   += rowSize;
+        pTextureRow += m_textureWidth;
+    }
+}
+
+//----------------------------------------------
+
+void TextureView::setUserMap(const nite::UserMap& userMap)
+{
+    if (!m_pTexture)
+        createTexture(userMap.getWidth(), userMap.getHeight());
+
+    memset(m_pTexture, 0, m_textureWidth * m_textureHeight * sizeof(openni::RGB888Pixel));
+
+    const nite::UserId* pSrcRow      = (const nite::UserId*) userMap.getPixels();
+    openni::RGB888Pixel* pTextureRow = m_pTexture;
+    int rowSize                      = userMap.getStride() / sizeof(nite::UserId);
+
+    for (int y = 0; y < m_srcHeight; ++y)
+    {
+        const nite::UserId* pSrc   = pSrcRow;
+        openni::RGB888Pixel* pDest = pTextureRow;
+
+        for (int x = 0; x < m_srcWidth; ++x, ++pSrc, ++pDest)
+        {
+            if (*pSrc != 0)
+            {
+                pDest->r = 0xFF;
+                pDest->g = 0xFF;
+                pDest->b = 0xFF;
+            }
+        }
+
+        pSrcRow     += rowSize;
+        pTextureRow += m_textureWidth;
+    }
+}
+
+//----------------------------------------------
+
 void TextureView::display()
 {
+    if (!m_pTexture)
+        return;
+
     glPushMatrix();
 
     // Setup the projection
@@ -45,7 +159,7 @@ void TextureView::display()
     glTranslatef(m_x, m_y, 0);
 
     // Setup the model-view transformation
-	glMatrixMode(GL_MODELVIEW);
+    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
     // Prepare the texture

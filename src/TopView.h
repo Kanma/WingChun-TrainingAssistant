@@ -21,7 +21,7 @@ public:
                       unsigned int height
                       DEVELOPMENT_PARAMETER(bool layoutDebugging = false));
 
-    void setUserMap(const nite::UserMap& userMap);
+    void update(openni::VideoFrameRef* pDepthFrame, const nite::UserMap& userMap);
 
 
     //_____ Attributes __________
